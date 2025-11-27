@@ -51,13 +51,20 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aircraft Controls")
 	float flapInput = 0.f;
 
+#if WITH_EDITOR
+	UStaticMeshComponent* CoMMesh;
+	UMaterialInstanceDynamic* material;
+#endif
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
 	TArray<UAerodynamicSurface*> surfaces;
+	TArray<UAircraftEngineComponent*> engines;
 
 	void updateControlSurfaces();
+	void  updateEngineVectors();
 
 
 

@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "Components/SceneComponent.h"
 #include "AerodynamicSurface.h"
+#include "AircraftEngineComponent.h"
 #include "2Vector.h"
 #include "AircraftPhysicsComponent.generated.h"
 
@@ -26,6 +27,9 @@ public:
 	TArray<UAerodynamicSurface*> aeroSurfaces;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Physics")
+	TArray<UAircraftEngineComponent*> engines;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Physics")
 	float airDensity = 1.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Physics")
@@ -34,7 +38,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aircraft Physics")
 	bool enableDebug = true;
 
+	float simulatedVelocity = 0.f;
+
 	void setThrustPercent(float);
+	void defaultThrustDirection(UAircraftEngineComponent*, FVector);
+	
 
 	float thrustPercent = 0.f;
 	FAeroVector forceTorque;
@@ -42,7 +50,7 @@ public:
 	UPrimitiveComponent* physicsComponent = nullptr;
 
 	FAeroVector calculateAerodynamicForces(const FVector&, const FVector&, const FVector&, float, const FVector&);
-
+	FAeroVector calculateEngineForces(const FVector&);
 
 
 protected:

@@ -2,6 +2,12 @@
 
 
 #include "AerodynamicSurface.h"
+#include "Kismet/KismetStringLibrary.h"
+
+FString UAerodynamicSurface::convertBoolToString(bool conv)
+{
+	return conv ? TEXT("True") : TEXT("False");
+}
 
 // Sets default values for this component's properties
 UAerodynamicSurface::UAerodynamicSurface()
@@ -20,15 +26,6 @@ UAerodynamicSurface::UAerodynamicSurface()
 		TEXT("/Engine/BasicShapes/Plane.Plane"));
 	UMaterialInstance* visualMat = LoadObject<UMaterialInstance>(nullptr, 
 		TEXT("/Game/FlightSimulation/Visualiser/M_SurfaceVisual_Inst.M_SurfaceVisual_Inst"));
-	
-	if (!planeMesh)
-		UE_LOG(LogTemp, Error, TEXT("not found visualiser plane"));
-	if (!visualMat)
-		UE_LOG(LogTemp, Error, TEXT("not found visualiser material"));
-	if (planeMesh)
-		UE_LOG(LogTemp, Error, TEXT("found visualiser plane"));
-	if (visualMat)
-		UE_LOG(LogTemp, Error, TEXT("found visualiser material"));
 		
 
 	if (planeMesh)
@@ -120,21 +117,20 @@ void UAerodynamicSurface::BeginPlay()
 	if (surfaceMesh)
 		surfaceMesh->SetVisibility(enableDebug);
 	if (flapMesh)
-		surfaceMesh->SetVisibility(enableDebug);
+		flapMesh->SetVisibility(enableDebug);
 	if (upArrow)
-		surfaceMesh->SetVisibility(isControlSurface && enableDebug);
+		upArrow->SetVisibility(isControlSurface && enableDebug);
 }
 
 void UAerodynamicSurface::setFlapAngle(float angle)
 {
 	float newAngle = FMath::Clamp(angle, -FMath::DegreesToRadians(50.f), FMath::DegreesToRadians(50.f));
-	flapAngle = newAngle;
+	flapAngle = angle;
 #if WITH_EDITOR
 	if (enableDebug)
 	{
 		const FRotator flapRotation = FRotator(0.f, 0.f, FMath::RadiansToDegrees(flapAngle));
-		UE_LOG(LogTemp, Display, TEXT("FlapAngle for %s is: %f. Requested angle: %f, SetAngle: %f"), 
-			*this->GetName(), FMath::RadiansToDegrees(flapAngle), FMath::RadiansToDegrees(angle), FMath::RadiansToDegrees(newAngle));
+		
 		flapHinge->SetRelativeRotation(flapRotation);
 	}
 #endif	
@@ -143,6 +139,7 @@ void UAerodynamicSurface::setFlapAngle(float angle)
 FAeroVector UAerodynamicSurface::calculateForces(const FVector& airVelocity, float airDensity, const FVector& relativePosition)
 {
 	FAeroVector forceTorque;
+	
 
 	config.validate();
 
@@ -165,7 +162,9 @@ FAeroVector UAerodynamicSurface::calculateForces(const FVector& airVelocity, flo
 	const float stallHigh = zeroLiftAoA + ClMaxHigh / correctedLiftSlope;
 	const float stallLow = zeroLiftAoA + ClMaxLow / correctedLiftSlope;
 
+	//edit this for testing
 	FVector localAirVelocity = GetComponentTransform().InverseTransformVectorNoScale(airVelocity);
+	//localAirVelocity = FVector(-1000.f, 0.f, 0.f);
 	localAirVelocity = FVector(0., localAirVelocity.Y, localAirVelocity.Z);
 
 	const FVector dragDir = GetComponentTransform().TransformVectorNoScale(localAirVelocity.GetSafeNormal());
@@ -201,10 +200,13 @@ FAeroVector UAerodynamicSurface::calculateForces(const FVector& airVelocity, flo
 FVector UAerodynamicSurface::calculateCoefficients(float aoa, float cls, float zeroLift, float stallHigh, float stallLow)
 {
 	FVector coeffs;
-	const float paddingHigh = FMath::DegreesToRadians(FMath::Lerp(15.f, 5.f, (FMath::RadiansToDegrees(flapAngle + 50) / 100.f)));
-	const float paddingLow = FMath::DegreesToRadians(FMath::Lerp(15.f, 5.f, (-FMath::RadiansToDegrees(flapAngle + 50) / 100.f)));
+	const float paddingHigh = FMath::DegreesToRadians(FMath::Lerp(15.f, 5.f, (FMath::RadiansToDegrees(flapAngle + 1) / 100.f)));
+	const float paddingLow = FMath::DegreesToRadians(FMath::Lerp(15.f, 5.f, (-FMath::RadiansToDegrees(flapAngle + 1) / 100.f)));
+	
 	const float paddedHigh = stallHigh + paddingHigh;
 	const float paddedLow = stallLow + paddingLow;
+	bool isStall = false;
+	float lerpT = 0;
 
 	if (aoa < stallHigh && aoa > stallLow)
 	{
@@ -212,6 +214,7 @@ FVector UAerodynamicSurface::calculateCoefficients(float aoa, float cls, float z
 	}
 	else
 	{
+		isStall = true;
 		if (aoa > paddedHigh || aoa < paddedLow)
 		{
 			coeffs = calculateCoefficientsAtStall(aoa, cls, zeroLift, stallHigh, stallLow);
@@ -219,7 +222,7 @@ FVector UAerodynamicSurface::calculateCoefficients(float aoa, float cls, float z
 		else
 		{
 			FVector coeffsLow, coeffsStall;
-			float lerpT = 0;
+			
 			if (aoa > stallHigh)
 			{
 				coeffsLow = calculateCoefficientsAtLowAoA(stallHigh, cls, zeroLift);
@@ -235,7 +238,10 @@ FVector UAerodynamicSurface::calculateCoefficients(float aoa, float cls, float z
 			coeffs = FMath::Lerp(coeffsLow, coeffsStall, lerpT);
 		}
 	}
-
+	/*
+	UE_LOG(LogTemp, Display, TEXT("coeffs: lift: %f, drag: %f, stall: %s, lerp: %f"),
+		coeffs.X, coeffs.Y, *convertBoolToString(isStall), lerpT);
+	*/
 #if WITH_EDITOR
 	if (enableDebug)
 	{

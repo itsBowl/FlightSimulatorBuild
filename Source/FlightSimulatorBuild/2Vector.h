@@ -17,8 +17,8 @@ public:
 
 	FAeroVector() {}
 
-	FAeroVector(const FVector& force, const FVector& torque)
-		: p(force), q(torque)
+	FAeroVector(const FVector& a, const FVector& b)
+		: p(a), q(b)
 	{
 	}
 
@@ -43,4 +43,14 @@ public:
 		q += other.q;
 		return *this;
 	}
+};
+
+
+UENUM(BlueprintType)
+enum class EControlInputType : uint8
+{
+	Pitch UMETA(DisplayName = "Pitch"),
+	Yaw UMETA(DisplayName = "Yaw"),
+	Roll UMETA(DisplayName = "Roll"),
+	Flaps UMETA(DisplayName = "Flaps")
 };

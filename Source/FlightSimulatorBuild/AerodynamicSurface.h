@@ -39,15 +39,6 @@ struct FAerodynamicSection
 	UCurveFloat* dragCurve = nullptr;
 };
 
-UENUM(BlueprintType)
-enum class EControlInputType : uint8
-{
-	Pitch UMETA(DisplayName = "Pitch"),
-	Yaw UMETA(DisplayName = "Yaw"),
-	Roll UMETA(DisplayName = "Roll"),
-	Flaps UMETA(DisplayName = "Flaps")
-};
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FLIGHTSIMULATORBUILD_API UAerodynamicSurface : public USceneComponent
@@ -64,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aerodynamic Surface")
 	bool isControlSurface = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aerodynamic Surface")
+	bool enableDebug = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aerodynamic Surface", meta = (EditCondition = "isControlSurface", EditConditionHides))
 	EControlInputType inputType = EControlInputType::Pitch;
 
@@ -79,7 +73,7 @@ public:
 	UMaterialInstanceDynamic* flapDynMat;
 #endif
 
-	bool enableDebug = true;
+	
 	
 	float flapAngle = 0.f;
 
@@ -96,6 +90,8 @@ public:
 	float frictionAt90Degrees(float);
 	float flapEffectivenessCorrection(float);
 	float liftCoefficientMaxFraction(float);
+
+	FString convertBoolToString(bool conv);
 	
 
 protected:
