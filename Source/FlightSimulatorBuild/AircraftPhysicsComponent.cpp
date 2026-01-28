@@ -93,7 +93,7 @@ void UAircraftPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 	physicsComponent->AddForceAtLocationLocal(engineForce.p, engineForce.q);
 
-	physicsComponent->AddForceAtLocation(engineForce.p, engineForce.q);
+	//physicsComponent->AddForceAtLocation(engineForce.p, engineForce.q);
 
 	
 	UE_LOG(LogTemp, Display, TEXT("thrust: %s pos: %s thrust pos: %s"), *engineForce.p.ToString(), *CoM.ToString(), *(engineForce.q).ToString());
