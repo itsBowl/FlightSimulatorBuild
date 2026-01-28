@@ -69,6 +69,8 @@ void UAircraftPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	const FVector simVel = FVector(simulatedVelocity, 0.f, 0.f);
 	const FVector angularVelocity = physicsComponent->GetPhysicsAngularVelocityInRadians();
 	const FVector CoM = physicsComponent->GetCenterOfMass();
+	FBodyInstance* body = physicsComponent->GetBodyInstance();
+	FVector CoG = body->GetCOMPosition();
 	const FVector wind = FVector(0.f, 0.f, 0.f);
 	FAeroVector forceTorqueFrame = calculateAerodynamicForces(linearVelocity, angularVelocity, wind, airDensity, CoM);
 	FAeroVector engineForce = calculateEngineForces(CoM);
@@ -86,13 +88,16 @@ void UAircraftPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	//physicsComponent->AddForceAtLocation(engineForce.p, engineForce.q + physicsComponent->GetCenterOfMass());
 	//physicsComponent->AddForceAtLocation(thisEngine->thrust * thisEngine->getForward() * thisEngine->throttle, GetOwner()->GetTransform().InverseTransformPositionNoScale(engineForce.q));
 	
-	physicsComponent->AddForce(thisEngine->GetForwardVector() * thisEngine->thrust * thisEngine->throttle);
+	//we can modify the add force location to be offset from CoM by swapping it out at some point in development
+	//for now I want a thing what flies, so we're assuming every craft is a pusher from CoM directly
+
+	physicsComponent->AddForceAtLocationLocal(engineForce.p, engineForce.q);
+
+	physicsComponent->AddForceAtLocation(engineForce.p, engineForce.q);
+
 	
-	/*
-	UE_LOG(LogTemp, Display, TEXT("Vel: %f, %f, %f Spd (m/s): %f"), 
-		physicsComponent->GetComponentVelocity().X, physicsComponent->GetComponentVelocity().Y, physicsComponent->GetComponentVelocity().Z,
-		physicsComponent->GetComponentVelocity().Length() / 100.f);
-*/
+	UE_LOG(LogTemp, Display, TEXT("thrust: %s pos: %s thrust pos: %s"), *engineForce.p.ToString(), *CoM.ToString(), *(engineForce.q).ToString());
+
 	// ...
 }
 
@@ -113,8 +118,9 @@ FAeroVector UAircraftPhysicsComponent::calculateEngineForces(const FVector& com)
 	FAeroVector forces;
 	for (auto e : engines)
 	{
-		forces.p += e->calculateForces();
-		forces.q += e->GetComponentLocation() - com;
+		forces.p += e->direction * e->calculateThrust();
+		forces.q += e->GetRelativeLocation();;
+		
 	}
 
 	return forces;

@@ -36,6 +36,7 @@ public:
 	void setThrustDirection(FVector);
 	void setThrottle(float);
 	FVector calculateForces();
+	float calculateThrust();
 
 	void setThrustVector(float, EControlInputType);
 	void setThrustVector(FVector);

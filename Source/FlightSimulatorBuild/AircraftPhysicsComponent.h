@@ -48,6 +48,7 @@ public:
 	FAeroVector forceTorque;
 
 	UPrimitiveComponent* physicsComponent = nullptr;
+	UPrimitiveComponent* root = nullptr;
 
 	FAeroVector calculateAerodynamicForces(const FVector&, const FVector&, const FVector&, float, const FVector&);
 	FAeroVector calculateEngineForces(const FVector&);

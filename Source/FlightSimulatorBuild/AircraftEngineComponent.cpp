@@ -63,9 +63,13 @@ void UAircraftEngineComponent::setThrustVector(float angle, EControlInputType ty
 void UAircraftEngineComponent::setThrustVector(FVector a)
 {
 	//a = FMath::RadiansToDegrees(a);
-	FRotator rot = FRotator(FMath::RadiansToDegrees(-a.X), FMath::RadiansToDegrees(-a.Y), FMath::RadiansToDegrees(-a.Z));
-	this->SetRelativeRotation(rot);
-	UE_LOG(LogTemp, Display, TEXT("%s, %s"), *this->GetRelativeRotation().ToString(), *a.ToString());
+	if (vectored)
+	{
+		FRotator rot = FRotator(FMath::RadiansToDegrees(-a.X), FMath::RadiansToDegrees(-a.Y), FMath::RadiansToDegrees(-a.Z));
+		this->SetRelativeRotation(rot);
+		UE_LOG(LogTemp, Display, TEXT("%s, %s"), *this->GetRelativeRotation().ToString(), *a.ToString());
+	}
+	
 }
 
 void UAircraftEngineComponent::setThrottle(float t) { throttle = t; }
@@ -75,6 +79,11 @@ FVector UAircraftEngineComponent::calculateForces()
 
 	//UE_LOG(LogTemp, Display, TEXT("Vals: %f, %f, %s, %s"), throttle, thrust, *direction.ToString(), *GetComponentTransform().GetRotation().GetForwardVector().ToString())
 	return throttle * thrust * direction;
+}
+
+float UAircraftEngineComponent::calculateThrust()
+{
+	return throttle * thrust;
 }
 
 
